@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Rendering</title>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: rgb(85,182,227);
+            background: linear-gradient(90deg, rgba(85,182,227,1) 0%, rgba(41,219,255,1) 0%, rgba(251,101,255,1) 100%);
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>JSON Data</h1>
+        <input type="text" id="searchInput" placeholder="Search by name...">
+        <input type="text" id="filterInput" placeholder="Filter by designation/skills...">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Designation</th>
+                    <th>Skills</th>
+                    <th>Projects</th>
+                </tr>
+            </thead>
+            <tbody id="dataBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        let jsonData; 
+        function fetchJSONData(url) {
+            return fetch(url)
+                .then(response => response.json())
+                .catch(error => {
+                    console.error('Error fetching JSON data:', error);
+                });
+        }
+
+        function renderData(data) {
+            const dataBody = document.getElementById('dataBody');
+            dataBody.innerHTML = '';
+
+            data.employees.forEach(employee => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${employee.name || '-'}</td>
+                    <td>${employee.designation || '-'}</td>
+                    <td>${employee.skills.join(', ')}</td>
+                    <td>${employee.projects ? employee.projects.length : 0}</td>
+                `;
+                dataBody.appendChild(row);
+            });
+        }
+
+        function filterData() {
+            const searchInput = document.getElementById('searchInput');
+            const filterInput = document.getElementById('filterInput');
+            const keyword = searchInput.value.trim().toLowerCase();
+            const filter = filterInput.value.trim().toLowerCase();
+
+            const filteredData = jsonData.employees.filter(employee => {
+                const nameMatch = employee.name && employee.name.toLowerCase().includes(keyword);
+                const designationMatch = employee.designation && employee.designation.toLowerCase().includes(filter);
+                const skillsMatch = employee.skills.some(skill => skill.toLowerCase().includes(filter));
+                return nameMatch || designationMatch || skillsMatch;
+            });
+
+            renderData({ employees: filteredData });
+        }
+
+        document.getElementById('searchInput').addEventListener('input', filterData);
+        document.getElementById('filterInput').addEventListener('input', filterData);
+
+        fetchJSONData('https://raw.githubusercontent.com/dixitsoham7/dixitsoham7.github.io/main/index.json')
+            .then(data => {
+                jsonData = data; 
+                renderData(data);
+            });
+    </script>
+</body>
+</html>
